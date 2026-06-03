@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fuel Efficiency Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #080c14;
+      --card:         #0e1420;
+      --card-border:  #1c2a3e;
+      --panel:        #111827;
+      --panel-border: #1e2d42;
+      --accent:       #3b82f6;
+      --accent-dim:   rgba(59,130,246,0.15);
+      --accent-glow:  rgba(59,130,246,0.30);
+      --violet:       #7c3aed;
+      --text:         #f0f4ff;
+      --text-2:       #94a3b8;
+      --text-3:       #4b6280;
+      --input-bg:     #0b1120;
+      --input-bd:     #1e3050;
+      --input-bd-f:   #3b82f6;
+      --success:      #10b981;
+      --success-dim:  rgba(16,185,129,0.12);
+      --success-bd:   rgba(16,185,129,0.35);
+      --warn:         #f59e0b;
+      --warn-dim:     rgba(245,158,11,0.12);
+      --warn-bd:      rgba(245,158,11,0.35);
+      --danger:       #ef4444;
+      --danger-dim:   rgba(239,68,68,0.12);
+      --danger-bd:    rgba(239,68,68,0.35);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── Mesh background ── */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 10%, rgba(59,130,246,0.13) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 85%, rgba(124,58,237,0.11) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 60%);
+    }
+
+    /* ── App shell ── */
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Top brand bar ── */
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo svg { flex-shrink: 0; }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .brand-name span { color: var(--accent); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ── Main card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 32px 80px rgba(0,0,0,0.6),
+        0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    /* ── Card hero ── */
+    .card-hero {
+      padding: 28px 32px 24px;
+      border-bottom: 1px solid var(--card-border);
+      background: linear-gradient(135deg, rgba(59,130,246,0.06) 0%, transparent 60%);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .hero-icon {
+      flex-shrink: 0;
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 32px rgba(59,130,246,0.35);
+    }
+    .hero-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .hero-text p {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-top: 3px;
+    }
+    .model-chip {
+      margin-left: auto;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 11px;
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+    .model-chip strong { color: var(--text); font-size: 12px; }
+
+    /* ── Form body ── */
+    .card-body {
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Section ── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .section-icon {
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-icon.blue  { background: rgba(59,130,246,0.18); }
+    .section-icon.green { background: rgba(16,185,129,0.16); }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--panel-border);
+    }
+
+    /* ── Input grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-3);
+      padding-left: 2px;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+    .input-wrap:focus-within svg { color: var(--accent); }
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      padding: 9px 12px 9px 34px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-bd);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 13.5px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      appearance: none;
+    }
+    .input-wrap input::placeholder { color: var(--text-3); font-weight: 400; }
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      outline: none;
+      border-color: var(--input-bd-f);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .input-wrap.select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 12px; top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--text-3);
+      pointer-events: none;
+    }
+    .input-wrap select { padding-right: 32px; cursor: pointer; }
+    .input-wrap select option { background: #0e1420; }
+
+    /* ── Hint text ── */
+    .field-hint {
+      font-size: 10.5px;
+      color: var(--text-3);
+      padding-left: 2px;
+    }
+
+    /* ── Predict button ── */
+    .btn-predict {
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 24px rgba(59,130,246,0.35), 0 1px 0 rgba(255,255,255,0.1) inset;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-predict::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .btn-predict:hover::before { transform: translateX(100%); }
+    .btn-predict:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(59,130,246,0.45); }
+    .btn-predict:active { transform: translateY(0); }
+    .btn-predict:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Loader ── */
+    .loader {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text-2);
+      font-size: 13px;
+    }
+    .loader.show { display: flex; }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result panel ── */
+    .result-panel {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .result-panel.show { display: flex; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--success-bd);
+      background: var(--success-dim);
+    }
+    .result-card.warn   { border-color: var(--warn-bd);   background: var(--warn-dim); }
+    .result-card.danger { border-color: var(--danger-bd); background: var(--danger-dim); }
+    .result-card.error  { border-color: var(--danger-bd); background: var(--danger-dim); }
+
+    .result-top {
+      padding: 20px 22px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .result-main { flex: 1; }
+    .result-eyebrow {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--success);
+      margin-bottom: 4px;
+    }
+    .result-card.warn   .result-eyebrow { color: var(--warn); }
+    .result-card.danger .result-eyebrow,
+    .result-card.error  .result-eyebrow { color: var(--danger); }
+
+    .result-number-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      line-height: 1;
+    }
+    .result-number {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .result-unit {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 3px;
+    }
+    .result-mpg {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 5px;
+    }
+
+    .result-rating-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid currentColor;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .rating-excellent { color: #10b981; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); }
+    .rating-good      { color: #34d399; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.1); }
+    .rating-average   { color: #f59e0b; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
+    .rating-low       { color: #f97316; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.1); }
+    .rating-poor      { color: #ef4444; border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.1); }
+
+    /* ── Efficiency bar ── */
+    .result-bar-wrap {
+      padding: 0 22px 18px;
+    }
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-3);
+      margin-bottom: 5px;
+    }
+    .bar-track {
+      height: 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.07);
+      overflow: visible;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+      position: relative;
+    }
+    .bar-fill::after {
+      content: '';
+      position: absolute;
+      right: -1px; top: 50%;
+      transform: translateY(-50%);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: inherit;
+      box-shadow: 0 0 8px 2px currentColor;
+    }
+
+    /* ── Error state ── */
+    .error-msg {
+      padding: 16px 22px;
+      font-size: 13px;
+      color: #fca5a5;
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    .card-footer {
+      padding: 14px 32px 18px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-info {
+      font-size: 11px;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .footer-info a { color: var(--text-3); text-decoration: none; }
+    .footer-info a:hover { color: var(--text-2); }
+    .footer-sep { color: var(--text-3); opacity: 0.4; }
+  </style>
+</head>
+
+<body>
+<div class="bg-mesh" aria-hidden="true"></div>
+
+<div class="app">
+
+  <!-- Brand bar -->
+  <div class="brand-bar">
+    <div class="brand-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 17h2l1-4h12l1 4h2M5 13l2-6h10l2 6" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="7" cy="18" r="1.5" fill="#3b82f6"/>
+        <circle cx="17" cy="18" r="1.5" fill="#3b82f6"/>
+        <path d="M10 10h4" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-name">Fuel<span>AI</span></span>
+    </div>
+    <div class="badge">
+      <div class="badge-dot"></div>
+      Random Forest · COMP6577
+    </div>
+  </div>
+
+  <!-- Main card -->
+  <div class="card">
+
+    <!-- Hero -->
+    <div class="card-hero">
+      <div class="hero-icon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="hero-text">
+        <h1>Fuel Efficiency Predictor</h1>
+        <p>ML-powered estimate from vehicle specifications</p>
+      </div>
+      <div class="model-chip" title="UCI Auto MPG Dataset · 392 samples">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/></svg>
+        <strong>92%</strong> R² accuracy
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card-body">
+
+      <!-- Engine section -->
+      <div>
+        <div class="section-head">
+          <div class="section-icon blue">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+            </svg>
+          </div>
+          <span class="section-title">Engine</span>
+          <div class="section-line"></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="cylinders">Cylinders</label>
+            <div class="input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+              <input id="cylinders" type="number" min="3" max="8" placeholder="4" autocomplete="off">
+            </div>
+            <span class="field-hint">Typical: 4, 6, or 8</span>
+          </div>
+
+          <div class="field">
+            <label for="displacement">Displacement (cc)</label>
+            <div class="input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 2h-5L2 9.5v5L9.5 22h5l7.5-7.5v-5L14.5 2z"/></svg>
+              <input id="displacement" type="number" placeholder="140" autocomplete="off">
+            </div>
+            <span class="field-hint">e.g. 140 (small), 307 (large)</span>
+          </div>
+
+          <div class="field">
+            <label for="horsepower">Horsepower (hp)</label>
+            <div class="input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <input id="horsepower" type="number" placeholder="90" autocomplete="off">
+            </div>
+            <span class="field-hint">e.g. 70–230 hp range</span>
+          </div>
+
+          <div class="field">
+            <label for="acceleration">0–60 mph (s)</label>
+            <div class="input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <input id="acceleration" type="number" step="0.1" placeholder="15.0" autocomplete="off">
+            </div>
+            <span class="field-hint">Time to reach 60 mph</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle section -->
+      <div>
+        <div class="section-head">
+          <div class="section-icon green">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="9" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+            </svg>
+          </div>
+          <span class="section-title">Vehicle</span>
+          <div class="section-line"></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="weight">Weight (lbs)</label>
+            <div class="input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+              <input id="weight" type="number" placeholder="2500" autocomplete="off">
+            </div>
+            <span class="field-hint">e.g. 1600–5000 lbs</span>
+          </div>
+
+          <div class="field">
+            <label for="model_year">Model Year</label>
+            <div class="input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <input id="model_year" type="number" min="70" max="82" placeholder="80" autocomplete="off">
+            </div>
+            <span class="field-hint">Last 2 digits, e.g. 78</span>
+          </div>
+        </div>
+
+        <div class="grid-1" style="margin-top:12px">
+          <div class="field">
+            <label for="origin">Manufacturing Origin</label>
+            <div class="input-wrap select-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <select id="origin">
+                <option value="1">🇺🇸  USA</option>
+                <option value="2">🇪🇺  Europe</option>
+                <option value="3">🇯🇵  Japan</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action -->
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <button class="btn-predict" id="predict-btn" onclick="predict()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Predict Fuel Efficiency
+        </button>
+
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+          Running model inference…
+        </div>
+
+        <!-- Result -->
+        <div class="result-panel" id="result-panel">
+          <div class="result-card" id="result-card">
+            <div class="result-top">
+              <div class="result-main">
+                <div class="result-eyebrow" id="result-eyebrow">Predicted Efficiency</div>
+                <div class="result-number-row">
+                  <span class="result-number" id="result-number">—</span>
+                  <span class="result-unit">km/g</span>
+                </div>
+                <div class="result-mpg" id="result-mpg"></div>
+              </div>
+              <div class="result-rating-badge" id="result-badge"></div>
+            </div>
+            <div class="result-bar-wrap" id="result-bar-wrap">
+              <div class="bar-labels">
+                <span>Poor</span>
+                <span>Average</span>
+                <span>Excellent</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-fill" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /card-body -->
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <span class="footer-info">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        UCI Auto MPG Dataset
+      </span>
+      <span class="footer-info">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        FastAPI · Scikit-learn · Python
+      </span>
+    </div>
+
+  </div><!-- /card -->
+
+</div><!-- /app -->
+
+<script>
+// TODO: replace with Render URL after deployment, e.g. "https://your-app.onrender.com"
+const API_URL = "http://127.0.0.1:8000";
+
+// Efficiency rating thresholds (km/g). Dataset range ≈ 4.8–55 km/g
+function getRating(kmg) {
+  if (kmg >= 30)      return { label: "Excellent", cls: "rating-excellent", color: "#10b981" };
+  if (kmg >= 22)      return { label: "Good",      cls: "rating-good",      color: "#34d399" };
+  if (kmg >= 15)      return { label: "Average",   cls: "rating-average",   color: "#f59e0b" };
+  if (kmg >= 10)      return { label: "Low",        cls: "rating-low",       color: "#f97316" };
+  return               { label: "Poor",       cls: "rating-poor",      color: "#ef4444" };
+}
+
+// Map km/g to bar fill % (4 = 0%, 55 = 100%)
+function toBarPct(kmg) {
+  return Math.min(100, Math.max(0, ((kmg - 4) / 51) * 100));
+}
+
+function barGradient(kmg) {
+  const pct = toBarPct(kmg);
+  if (kmg >= 30) return "linear-gradient(90deg, #059669, #10b981)";
+  if (kmg >= 22) return "linear-gradient(90deg, #059669, #34d399)";
+  if (kmg >= 15) return "linear-gradient(90deg, #d97706, #f59e0b)";
+  if (kmg >= 10) return "linear-gradient(90deg, #ea580c, #f97316)";
+  return "linear-gradient(90deg, #b91c1c, #ef4444)";
+}
+
+async function predict() {
+  const btn    = document.getElementById("predict-btn");
+  const loader = document.getElementById("loader");
+  const panel  = document.getElementById("result-panel");
+  const card   = document.getElementById("result-card");
+  const origin = document.getElementById("origin").value;
+
+  btn.disabled = true;
+  panel.classList.remove("show");
+  loader.classList.add("show");
+
+  const data = {
+    cylinders:    parseFloat(document.getElementById("cylinders").value),
+    displacement: parseFloat(document.getElementById("displacement").value),
+    horsepower:   parseFloat(document.getElementById("horsepower").value),
+    weight:       parseFloat(document.getElementById("weight").value),
+    acceleration: parseFloat(document.getElementById("acceleration").value),
+    model_year:   parseFloat(document.getElementById("model_year").value),
+    origin_1: origin == 1 ? 1 : 0,
+    origin_2: origin == 2 ? 1 : 0,
+    origin_3: origin == 3 ? 1 : 0
+  };
+
+  try {
+    const resp = await fetch(`${API_URL}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const json = await resp.json();
+
+    loader.classList.remove("show");
+
+    if (json.error) {
+      showError("Validation Error", json.error);
+    } else {
+      const kmg  = json.predicted_km_per_gallon;
+      const mpg  = (kmg / 1.60934).toFixed(1);
+      const rate = getRating(kmg);
+      const pct  = toBarPct(kmg);
+
+      document.getElementById("result-eyebrow").textContent = "Predicted Fuel Efficiency";
+      document.getElementById("result-number").textContent  = kmg;
+      document.getElementById("result-mpg").textContent     = `≈ ${mpg} MPG`;
+
+      const badge = document.getElementById("result-badge");
+      badge.textContent = rate.label;
+      badge.className   = `result-rating-badge ${rate.cls}`;
+
+      card.className = "result-card";
+      if (rate.cls === "rating-poor" || rate.cls === "rating-low") card.className += " danger";
+      else if (rate.cls === "rating-average")                       card.className += " warn";
+
+      const fill = document.getElementById("bar-fill");
+      fill.style.background = barGradient(kmg);
+      // Animate from 0 after a frame
+      fill.style.width = "0%";
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        fill.style.width = pct + "%";
+      }));
+
+      document.getElementById("result-bar-wrap").style.display = "block";
+      panel.classList.add("show");
+    }
+  } catch (err) {
+    loader.classList.remove("show");
+    showError("Connection Error", "Could not reach the API. Is the backend running?");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showError(title, msg) {
+  const panel  = document.getElementById("result-panel");
+  const card   = document.getElementById("result-card");
+  document.getElementById("result-eyebrow").textContent = title;
+  document.getElementById("result-number").textContent  = "";
+  document.getElementById("result-mpg").textContent     = msg;
+  document.getElementById("result-badge").textContent   = "";
+  document.getElementById("result-badge").className     = "result-rating-badge";
+  document.getElementById("result-bar-wrap").style.display = "none";
+  card.className = "result-card error";
+  panel.classList.add("show");
+}
+</script>
+
+</body>
+</html>
