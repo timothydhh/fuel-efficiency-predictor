@@ -18,8 +18,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model_path = os.path.join(BASE_DIR, "..", "dataset", "model_rf.pkl")
-scaler_path = os.path.join(BASE_DIR, "..", "dataset", "scaler.pkl")
+model_path = os.path.join(BASE_DIR, "model_rf.pkl")
+scaler_path = os.path.join(BASE_DIR, "scaler.pkl")
 
 print("MODEL PATH:", model_path)
 print("SCALER PATH:", scaler_path)
