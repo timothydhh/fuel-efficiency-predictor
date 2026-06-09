@@ -767,9 +767,9 @@
                   stroke-linecap="round">
                   <path d="M14.5 2h-5L2 9.5v5L9.5 22h5l7.5-7.5v-5L14.5 2z" />
                 </svg>
-                <input id="displacement" type="number" placeholder="140" autocomplete="off">
+                <input id="displacement" type="number" placeholder="2300" autocomplete="off">
               </div>
-              <span class="field-hint">e.g. 140 (small), 307 (large)</span>
+              <span class="field-hint">e.g. 2300 (small), 5000 (large)</span>
             </div>
 
             <div class="field">
@@ -972,7 +972,7 @@
 
       const data = {
         cylinders: parseFloat(document.getElementById("cylinders").value),
-        displacement: parseFloat(document.getElementById("displacement").value),
+        displacement: parseFloat(document.getElementById("displacement").value) / 16.387,
         horsepower: parseFloat(document.getElementById("horsepower").value),
         weight: parseFloat(document.getElementById("weight").value),
         acceleration: parseFloat(document.getElementById("acceleration").value),
