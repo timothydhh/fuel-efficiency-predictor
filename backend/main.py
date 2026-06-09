@@ -63,9 +63,10 @@ def predict(data: VehicleInput):
         features_scaled = scaler.transform(features)
 
         prediction = model.predict(features_scaled)[0]
+        prediction_kml = float(prediction) / 3.78541
 
         return {
-            "predicted_km_per_gallon": round(float(prediction), 2)
+            "predicted_km_per_liter": round(prediction_kml, 2)
         }
 
     except Exception as e:
